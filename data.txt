@@ -1,0 +1,10 @@
+yes tall good
+no short bad
+no tall bad
+no short bad
+no tall good
+no short good
+no tall bad
+no short bad
+yes short good
+no short bad
