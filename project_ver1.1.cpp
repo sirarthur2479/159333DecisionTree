@@ -14,6 +14,24 @@
 #include <cmath>
 using namespace std;
 
+class Line {
+public:
+	vector<string> word;
+	Line(){}
+	~Line(){}
+	void addWord(string newWord){ word.push_back(newWord); }
+	void printWord() { for (int i = 0; i < word.size(); ++i){cout<<word[i];} cout<<endl;}
+};
+
+class Lines {
+public:
+	vector<Line*> data;
+	Lines(){}
+	~Lines(){}
+	void addLines(Line* newLine){ data.push_back(newLine);}
+	void printLines() {for (int i = 0; i < data.size(); ++i) { cout<<i<<": "; data[i]->printWord();}}
+};
+
 class Feature {
 private:
 	string featureName;
@@ -32,6 +50,7 @@ public:
 	int getIndex() { return index; }
 	void setIndex(int num) { index = num; }
 };
+
 Feature::Feature(string name) {
 	setFeatureName(name);
 }
@@ -52,29 +71,29 @@ private:
 public:
 	FeatureSet() {numOfFeatures = 0;}
 	~FeatureSet() {}
-	void addFeature(Feature newFeature) { newFeature.setIndex(numOfFeatures); numOfFeatures++;data.push_back(newFeature); }
-	vector<Feature> getFeatureSet(){ return data; }
+	void addFeature(Feature newFeature);
 	void addOption(string featureName, string newOption);
 	void printFeatureSet();
-	int getFeatureSize() { return data.size(); }
+	int size() { return data.size(); }
 	Feature getFeature(int featureIndex) { return data[featureIndex]; }
-	int getFeatureIndex(string featureName);
-	void erase_feature(int featureIndex){data.erase(data.begin()+featureIndex);numOfFeatures--;}
 	Feature getFeatureByPrivateIndex(int privateFeatureIndex); 
-	void erase_feautreByPrivateIndex(int privateFeatureIndex) {
-		for (int i = 0; i < data.size(); ++i) {
-			if (data[i].getIndex() == privateFeatureIndex) {
-				privateFeatureIndex = i;
-				break;
-			}
-		}
-		cout<<"fs erasing : "<<data[privateFeatureIndex].getFeatureName()<<endl;
-		data.erase(data.begin()+privateFeatureIndex);
-		cout<<"erase completed"<<endl;
-		numOfFeatures--;
-	}
-	
+	void eraseFeatureByPrivateIndex(int privateFeatureIndex);
 };
+
+void FeatureSet::addFeature(Feature newFeature) { newFeature.setIndex(numOfFeatures); numOfFeatures++;data.push_back(newFeature); }
+
+void FeatureSet::eraseFeatureByPrivateIndex(int privateFeatureIndex) {
+	for (int i = 0; i < data.size(); ++i) {
+		if (data[i].getIndex() == privateFeatureIndex) {
+			privateFeatureIndex = i;
+			break;
+		}
+	}
+	//cout<<"fs erasing : "<<data[privateFeatureIndex].getFeatureName()<<endl;
+	data.erase(data.begin()+privateFeatureIndex);
+	//cout<<"erase completed"<<endl;
+	numOfFeatures--;
+}
 Feature FeatureSet::getFeatureByPrivateIndex(int privateFeatureIndex) {
 	for (int i = 0; i < data.size(); ++i) {
 		//cout<<"searching fs option by comparing indexes :"<<data[i].getIndex()<<" ?= "<<privateFeatureIndex<<endl;
@@ -85,12 +104,6 @@ Feature FeatureSet::getFeatureByPrivateIndex(int privateFeatureIndex) {
 	}
 }
 
-int FeatureSet::getFeatureIndex(string featureName) {
-	for (int i = 0; i < data.size(); ++i) {
-		if (featureName == data[i].getFeatureName()) return i;
-	}
-	return -1;
-}
 
 void FeatureSet::addOption(string featureName, string newOption) {
 	for (int i = 0; i < data.size(); ++i) {
@@ -106,6 +119,7 @@ void FeatureSet::printFeatureSet(){
 		data[i].printFeature();
 	}
 }
+
 class Data {//smallest unit, hold one line of data with all its features
 private:
 	vector<string> features;
@@ -138,7 +152,7 @@ void Data::printData(){
 		for (int i = 0; i < numOfFeatures; ++i) {
 			cout<<features[i];
 			if (i == numOfFeatures-1) break; // do not print the last ", " in final loop
-			cout<<", ";
+			cout<<" ";
 		}
 		cout<<endl;
 	} else {
@@ -151,26 +165,14 @@ private:
 	vector<Data> dataset;
 	int numOfData;
 public:
-	Dataset();
+	Dataset() { }
   	~Dataset() { }
   	int size(){ return dataset.size();}
   	int addData(Data newthing);//add an unit of Data, return 1 if success; 0 if failed
   	Data getData(int num);//access a paticular data, mayby not needed, vector can just use [index] to access
   	void printDataset();
-  	//Dataset(const Dataset&);
     void erase_data(int index);
 };
-
-Dataset::Dataset() {
-	//vector<Data> dataset;
-}
-
-/*Dataset::Dataset(const Dataset& set){
-	numOfData = set.size();
-	for(int i = 0; i < numOfData; ++i){
-		dataset.push_back(set.getData(i));
-	}
-}*/
 
 void Dataset::erase_data(int index){
 	dataset.erase(dataset.begin()+index);
@@ -207,112 +209,28 @@ void Dataset::printDataset(){
 class Tree {
 	private:
 	  string label;
-	  string result;
 	  vector<string> name;//name of subtree pointers
 	  vector<Tree*> subtree; 
  
 	public:
-	  Tree();  
-	  ~Tree() { }
-	  //Dataset RootData() { return data; }  
-	  //Tree* Left() { return leftptr; }
-	  //Tree* Right() { return rightptr; }
-	  //bool isEndNode() { return endNode; }
-	  //void setEndNode(bool temp) { endNode = temp; }
-	  string getLabel() { return label; }
+	  Tree() { } 
+	  ~Tree() { }	  
 	  void setLabel(string labelName) { label = labelName; }
-	  string getResult() { return result; }
-	  void setResult(string resultName) { result = resultName; }
-	  
-	  void addSubTree(Tree* newthing, string newName);
-	  Tree* getSubTreeByIndex(int index) { return subtree[index];}
-	  void printSubTreeNameByIndex(int index) { cout<<"--("<<name[index]<<")-- ";}
-	  int getSubTreeSize() { return subtree.size(); }
-
-	  int checkResult();
+	  string getLabel() { return label; }
 	  void print_label() {cout<<"["<<label<<"] ";}
-	  string RootData() { return label+"||"+result;}
-	  Tree* Left() { return subtree[0]; }
-	  Tree* Right() { return subtree[1]; }
-	  void left_name() { cout<<"["<<name[0]<<"] ";}
-	  void right_name() { cout<<"["<<name[1]<<"] "; }
 
-	  
+	  void addSubTree(Tree* newthing, string newName);
+	  int getSubTreeSize() { return subtree.size(); }	
+	  Tree* getSubTreeByIndex(int index) { return subtree[index];}
+	  string getSubTreeNameByIndex(int index) { return name[index]; }
+	  void printSubTreeNameByIndex(int index) { cout<<"--("<<name[index]<<")-- ";}	      
 };
-
-Tree::Tree() {
-	label = "empty";
-}
 
 void Tree::addSubTree(Tree* newthing, string newName) {
 	subtree.push_back(newthing);
 	name.push_back(newName);
 }
 
-int Tree::checkResult() {
-	if (label == "+") return 1;
-	if (label == "-") return 0;
-	return -1;
-}
-
-struct Node {
-	Tree* data;
-	Node *next;
-};
-
-class Stack {
-	private:                       
-		Node *listpointer;
-	public:                       
-		Stack();
-		~Stack();
-		void Push(Tree* newthing);
-		void Pop();
-		Tree* Top();
-		bool isEmpty();
-};
-
-Stack::Stack() {
-   listpointer = NULL;
-}
-
-Stack::~Stack() {
-}
-
-void Stack::Push(Tree* newthing) {
-	Node *temp;
-   temp = new Node;    
-   temp->data = newthing;
-   temp->next = listpointer; 
-   listpointer = temp;
-}
-void Stack::Pop() {
-	Node *p;
-   p = listpointer;
-   if (listpointer != NULL) {   
-     listpointer = listpointer->next;
-     delete p;               
-  }
-}
-
-Tree* Stack::Top() {
-  return listpointer->data;
-}
-
-bool Stack::isEmpty() {
-  if (listpointer == NULL) {
-     return true;
-  }
-  return false;
-}
-
-// Stack S;
-// Tree *T1, *T2, *T3, *T4,*mytree;
-
-//Function_ID3(Samples,Classes,Features) 
-
-
-vector<Dataset> datasetSet;
 float Entropy(Dataset set){ // a is the answer of the features
 	int NP = set.size();
 	int NY=0, NN=0;
@@ -359,9 +277,9 @@ float Gain(Dataset ds, Feature f){
 int nextBranchByInformationGain(Dataset ds, FeatureSet fs){
 	float max = Gain(ds,fs.getFeature(1));
 	int indexOfnextBranchFs = 1;
-	cout<<"informationGain featureSize now: "<<fs.getFeatureSize()<<endl;
-	fs.printFeatureSet();
-	for(int i = 2; i < fs.getFeatureSize(); ++i){
+	//cout<<"informationGain featureSize now: "<<fs.size()<<endl;
+	//fs.printFeatureSet();
+	for(int i = 2; i < fs.size(); ++i){
 		float temp = Gain(ds,fs.getFeature(i));
 		//cout<<"compare information gain: "<<temp<<"||"<<max<<endl;
 		if (temp > max) {			
@@ -371,32 +289,27 @@ int nextBranchByInformationGain(Dataset ds, FeatureSet fs){
 		//fs.getFeature(i).printFeature();		
 	}
 	int indexOfnextBranchDs = fs.getFeature(indexOfnextBranchFs).getIndex();
-	cout<<"feaure name pick for infromation gain : "<<fs.getFeature(indexOfnextBranchFs).getFeatureName()<<endl;
-	cout<<"		-indexOfnextBranch in ds: "<<indexOfnextBranchDs<<endl;
-	cout<<"		-indexOfnextBranch in fs: "<<indexOfnextBranchFs<<endl;
+	//cout<<"feaure name pick for infromation gain : "<<fs.getFeature(indexOfnextBranchFs).getFeatureName()<<endl;
+	//cout<<"		-indexOfnextBranch in ds: "<<indexOfnextBranchDs<<endl;
+	//cout<<"		-indexOfnextBranch in fs: "<<indexOfnextBranchFs<<endl;
 	return indexOfnextBranchDs;
 }
-
-
 
 void addFeatureFunction(FeatureSet& set, string featureName){
 	Feature tempFeature(featureName);
 	set.addFeature(tempFeature);
 }
 
-// Automation for get the different options from different features
+// Automaticcally get options from all features
 void scanOption(FeatureSet &fs, string featureName, vector <string> vec){
-	//vector <string> temp1;
 	Feature tempFeature(featureName);
-	
-    std::set<std::string> s;
+    std::set<std::string> s;//use set to remove repeated options
     unsigned size = vec.size();
     for( unsigned i = 0; i < size; ++i ) s.insert( vec[i] );
-    vec.assign( s.begin(), s.end() );
+    vec.assign( s.begin(), s.end() );//convert from set to vector
 
     for (int i = 0; i < vec.size(); ++i) {
     	tempFeature.addOption(vec[i]);
-	
     }
     fs.addFeature(tempFeature);
 }
@@ -416,11 +329,11 @@ int checks_sample_positive_or_not(Dataset set){
 }
 
 int no_more_feature_left(FeatureSet set){
-    if(set.getFeatureSize() == 1){
+    if(set.size() == 1){
         return 1;
     }
-    if(set.getFeatureSize() > 1) return set.getFeatureSize();
-    if(set.getFeatureSize() < 1) return -1;
+    if(set.size() > 1) return set.size();
+    if(set.size() < 1) return -1;
 }
 
 int most_common_value(Dataset set, string branch_name){
@@ -434,6 +347,7 @@ int most_common_value(Dataset set, string branch_name){
     if(number_of_yes < number_of_no) return 0;
     if(number_of_yes == 0 && number_of_no == 0) return 0;
     if(number_of_yes == number_of_no) {
+    //can add special instruction for generating leaf here
         // if(branch_name=="short") return 0;
         // if(branch_name=="tall") return 1;
         // if(branch_name=="bad") return 0;
@@ -443,26 +357,26 @@ int most_common_value(Dataset set, string branch_name){
          
     
 }
-Tree* Function_ID3(Dataset ds, string branch_name, FeatureSet fs, string feature_option_for_tree ){
+Tree* Function_ID3(Dataset ds, string branch_name, FeatureSet fs){
 		Tree* Root = new Tree;
 		
 		//ds.printDataset();cout<<"\n|||||||||||||||||||||||\n";
 		if(checks_sample_positive_or_not(ds) == 1){//positive/yes result
 		    Tree* leaf = new Tree;
-		    leaf->setLabel("+ "  + feature_option_for_tree);
+		    leaf->setLabel("+");//  + feature_option_for_tree);
 		    
 		    return leaf;
 		}
 		if(checks_sample_positive_or_not(ds) == 0){//negative/no result
 		    Tree* leaf = new Tree;
-		    leaf->setLabel("- "  + feature_option_for_tree);
+		    leaf->setLabel("-");//  + feature_option_for_tree);
 		    return leaf;
 		}
 		
 		if(no_more_feature_left(fs) == 1){
 		    Tree* leaf = new Tree;
-		    if(most_common_value(ds, branch_name) == 1) leaf->setLabel("+ "  + feature_option_for_tree);
-		    else leaf->setLabel("- "  + feature_option_for_tree);
+		    if(most_common_value(ds, branch_name) == 1) leaf->setLabel("+");//  + feature_option_for_tree);
+		    else leaf->setLabel("-");//  + feature_option_for_tree);
 		    return leaf; 
 		} else {
 		    int feature_index = nextBranchByInformationGain(ds, fs);
@@ -473,56 +387,33 @@ Tree* Function_ID3(Dataset ds, string branch_name, FeatureSet fs, string feature
 	            // need a judgemnet here to decide whether add a subtree or not
     		    for(int j = ds.size()-1; j >= 0; j-- ){
     		        if(ds.getData(j).getFeature(feature_index) != fs.getFeatureByPrivateIndex(feature_index).getOption(i)){
-    		        	cout<<"erasing :"<<ds.getData(j).getFeature(feature_index)<<"||"<<endl;
-    		        	cout<<"comparing : "<<fs.getFeatureByPrivateIndex(feature_index).getOption(i)<<endl;
+    		        	//cout<<"erasing :"<<ds.getData(j).getFeature(feature_index)<<"||"<<endl;
+    		        	//cout<<"comparing : "<<fs.getFeatureByPrivateIndex(feature_index).getOption(i)<<endl;
     		            temp_set_for_pruning.erase_data(j);
     		        }
     		    
     		    }
-    		    temp_set_for_pruning.printDataset();
+    		    //temp_set_for_pruning.printDataset();
     		    
             		    
     		    if(temp_set_for_pruning.size()==0){//EMPTY DATA SET
     		    	//cout<<"5"<<endl;
     		        Tree* leaf = new Tree;
-    		        cout<<"branch_name: "<<branch_name<<endl<<endl;
-        		    if(most_common_value(temp_set_for_pruning, branch_name) == 1) {leaf->setLabel("+ "  + fs.getFeatureByPrivateIndex(feature_index).getOption(i));}
-        		    else {leaf->setLabel("- "  + fs.getFeatureByPrivateIndex(feature_index).getOption(i));}
+    		        //cout<<"branch_name: "<<branch_name<<endl<<endl;
+        		    if(most_common_value(temp_set_for_pruning, branch_name) == 1) {leaf->setLabel("+");}//  + fs.getFeatureByPrivateIndex(feature_index).getOption(i));}
+        		    else {leaf->setLabel("-");}//  + fs.getFeatureByPrivateIndex(feature_index).getOption(i));}
         		    Root->addSubTree(leaf, fs.getFeatureByPrivateIndex(feature_index).getOption(i)); 
     		    } else{//still data left in dataset
     		    //	cout<<"6"<<endl;
     		    	FeatureSet temp_fs_for_pruning(fs);
-    		    	temp_fs_for_pruning.erase_feautreByPrivateIndex(feature_index);
-    		        Root->addSubTree(Function_ID3(temp_set_for_pruning, fs.getFeatureByPrivateIndex(feature_index).getOption(i), temp_fs_for_pruning, fs.getFeatureByPrivateIndex(feature_index).getOption(i)), fs.getFeatureByPrivateIndex(feature_index).getOption(i));
+    		    	temp_fs_for_pruning.eraseFeatureByPrivateIndex(feature_index);
+    		        Root->addSubTree(Function_ID3(temp_set_for_pruning, fs.getFeatureByPrivateIndex(feature_index).getOption(i), temp_fs_for_pruning), fs.getFeatureByPrivateIndex(feature_index).getOption(i));
     		    }
             }
 		    return Root;
 		}
 }
 
-void inOrder(Tree *T){
-	//if(T==NULL){return;}
-	//if(T->Left()!=NULL)cout<<"(";
-	if(T->getSubTreeSize() != 0) inOrder(T->Left());
-	T->print_label();
-	if(T->getSubTreeSize() != 0) inOrder(T->Right());
-	//if(T->Right()!=NULL)cout<<")";
-}
-
-void PostOrder(Tree *T) {
-
-	if(T->getSubTreeSize() != 0) PostOrder(T->Left());
-	if(T->getSubTreeSize() != 0) PostOrder(T->Right());
-	T->print_label();
-}
-
-void PreOrder(Tree *T) {
-	//root, left, right
-
-	T->print_label();
-	if(T->getSubTreeSize() != 0) PreOrder(T->Left());
-	if(T->getSubTreeSize() != 0) PreOrder(T->Right());
-}
 
 void PreOrderForID3Short(Tree *T) {
 	//for not binary options
@@ -534,13 +425,107 @@ void PreOrderForID3Short(Tree *T) {
 }
 
 void PreOrderForID3(Tree *T) {
-	//for not binary options
-
 	T->print_label();
 	for (int i = 0; i < T->getSubTreeSize(); ++i) {
 		T->printSubTreeNameByIndex(i);
 		PreOrderForID3(T->getSubTreeByIndex(i));	
 	}	
+}
+
+int PreOrderForID3Temp(Tree *T, int level, int depth) {
+	//for not binary options
+
+	//cout<<"level "<<level<<" "<<T->getLabel()<<endl;
+	level++;
+	depth = level;
+	for (int i = 0; i < T->getSubTreeSize(); ++i) {
+		//cout<<T->getSubTreeNameByIndex(i)<<endl;
+		depth = PreOrderForID3Temp(T->getSubTreeByIndex(i), level, depth);	
+	}
+	return depth;	
+}
+
+// int PreOrderForID3TempAlter(Tree *T, int level, int depth, Lines &ls) {
+// 	//for not binary options
+
+// 	//cout<<"level "<<level<<" "<<T->getLabel()<<endl;
+// 	if (depth == 0) {Line *l1 = new Line(); l1->addWord(T->getLabel());}
+// 	elseif (depth == ls.size()){}
+// 	level++;
+// 	depth = level;
+// 	for (int i = 0; i < T->getSubTreeSize(); ++i) {
+// 		//cout<<T->getSubTreeNameByIndex(i)<<endl;
+// 		depth = PreOrderForID3Temp(T->getSubTreeByIndex(i), level, depth, &ls);	
+// 	}
+// 	return depth;	
+// }
+
+void PreOrderForID3Alter(Tree *T, int level) {
+	//for not binary options
+
+	cout<<"level "<<level<<" "<<T->getLabel()<<endl;
+	level++;
+	for (int i = 0; i < T->getSubTreeSize(); ++i) {
+		cout<<T->getSubTreeNameByIndex(i)<<endl;
+		PreOrderForID3Alter(T->getSubTreeByIndex(i), level);	
+	}
+}
+
+void PreOrderForID3PrintTree(Tree *T) {
+	int depth = PreOrderForID3Temp(T, 0,0);
+	//vector< vector<string> > tree = new vector< vector<string> >;
+	cout<<"depth: "<<depth<<endl;
+	string space = "		";
+	vector<string> line;
+	// for (int i = 0; i < depth; ++i) {
+ //    	vector<string> tempVec;//store data vertically
+	//     for (int j = 0;  j < dsRoot.size(); ++j) {
+	//     	tempVec.push_back(dsRoot.getData(j).getFeature(i));
+	//     }
+	//     scanOption(fs, featureNames[i], tempVec);
+ //    }
+}
+
+void AccuracyTree(Tree *T, Dataset ds, FeatureSet fs, int resultIndex) {
+	Tree* treeRoot = T;
+	int numOfCorrectResult = 0;
+	for (int i = 0; i < ds.size(); ++i) {//for each dataset entry
+		int featureIndex = -1, valueIndex = -1;
+		while(true){
+			if ((T->getLabel() == "+")||(T->getLabel() == "-")){				
+				string resultTranslation;
+				if (T->getLabel() == "+") resultTranslation = "yes";
+				else if (T->getLabel() == "-") resultTranslation = "no";
+				else { cout<<"failed result translation, STOP"<<endl;break; }
+				cout<<resultTranslation<<" ";
+				if (resultTranslation == ds.getData(i).getFeature(resultIndex)) {
+					numOfCorrectResult++;
+				}
+				T = treeRoot;
+				break;
+			}
+			for (int j = 0; j < fs.size(); ++j){//go through festure name
+				if (T->getLabel() == fs.getFeature(j).getFeatureName()){
+					featureIndex = j;//get index, then find its value
+				}
+			}
+			if (featureIndex == -1) {//failed to find right featureName
+				cout<<"failed to find right featureName, STOP"<<endl;break;
+			}
+			for (int j = 0; j < T->getSubTreeSize(); ++j) {//go through all branchess of tree
+				if (ds.getData(i).getFeature(featureIndex) == T->getSubTreeNameByIndex(j)){
+					valueIndex = j;
+					break;
+				}
+			}
+			if (valueIndex == -1) {//failed to find right value
+				cout<<"failed to find right value, training dataset does not cover all possible outcomes"<<endl;break;
+			}
+			T = T->getSubTreeByIndex(valueIndex);			
+		}
+	}
+	cout<<endl;
+	cout<<"Accuracy of Tree: "<<numOfCorrectResult/ds.size() *100 <<"% for "<<numOfCorrectResult<<" out of "<< ds.size()<<endl;
 }
 
 int main(){
@@ -549,20 +534,17 @@ int main(){
 	ifstream input_file;
 	
     Dataset dsRoot;
-	
 	FeatureSet fs;
 	
 	vector<string> featureNames;
     featureNames.push_back("result");featureNames.push_back("Height");featureNames.push_back("Dex");featureNames.push_back("Fitness");//featureNames.push_back("iq");
     
     input_file.open("data.2.txt");
-    //input_file.open("data.txt");
     if(!input_file.is_open()){
     	cout<< "Error: Could not found your file!"<<endl;
     }
 
     while(!input_file.eof()) {  		
-    	//input_file>>token[0]>>token[1]>>token[2];
     	for (int i = 0; i < featureNames.size(); ++i) {
     		input_file>>token[i];
     		a.push_back(token[i]);
@@ -570,6 +552,7 @@ int main(){
     	dsRoot.addData(a);
     	a.clear(); 
     }
+    dsRoot.printDataset();
 
     input_file.close();
     for (int i = 0; i < featureNames.size(); ++i) {
@@ -583,10 +566,22 @@ int main(){
    fs.printFeatureSet();
     
 	Tree* root = new Tree;
-	root = Function_ID3(dsRoot,"root", fs, "none");
+	root = Function_ID3(dsRoot,"root", fs);
 
-	//inOrder(root);cout<<"||"<<endl;
-	//PostOrder(root);cout<<"||"<<endl;
-	PreOrderForID3Short(root);cout<<"||"<<endl<<endl;
-	PreOrderForID3(root);cout<<"||"<<endl;
+	//PreOrderForID3PrintTree(root);//work in prograss || print depth correctly
+	PreOrderForID3(root);//working ||horizontal version of tree
+	//PreOrderForID3Alter(root, 0);//working ||vertical version of tree
+	AccuracyTree(root, dsRoot, fs, 0);//working
+
+	// Line *l1 = new Line();
+	// l1->addWord("happy");
+	// l1->addWord("sad");
+	// Line *l2 = new Line();
+	// l2->addWord("happy2");
+	// l2->addWord("sad2");
+	// Lines *tr = new Lines();
+	// tr->addLines(l1);
+	// tr->addLines(l2);
+	// tr->printLines();
 }
+
